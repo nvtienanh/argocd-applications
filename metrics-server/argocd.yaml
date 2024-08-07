@@ -1,0 +1,37 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: metrics-server
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  labels:
+    name: metrics-server
+spec:
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
+      allowEmpty: false
+    syncOptions:
+      - Validate=false
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+      - RespectIgnoreDifferences=true
+      - Replace=true
+  project: default
+  source:
+    chart: metrics-server
+    repoURL: https://kubernetes-sigs.github.io/metrics-server
+    targetRevision: 3.*
+    helm:
+      releaseName: metrics-server
+      passCredentials: false
+      valuesObject:
+        args:
+          - --kubelet-insecure-tls
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: kube-system
+  revisionHistoryLimit: 3
