@@ -1,0 +1,13 @@
+prometheus:
+  prometheusSpec:
+    podMonitorSelectorNilUsesHelmValues: false
+    serviceMonitorSelectorNilUsesHelmValues: false
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: nfs-storage
+          accessModes: ["ReadWriteMany"]
+          resources:
+            requests:
+              storage: 4Gi
+    disableCompaction: true

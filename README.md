@@ -6,6 +6,7 @@ A collection of Argo CD applications spec to deploy:
 - [Dynamic NFS Provisioning](./nfs-storage/argocd.yaml)
 - [Kiali Operator](./kiali-operator/argocd.yaml)
 - [Ingress Nginx](./ingress-nginx/argocd.yaml)
+- [Kube Prometheus Stack](./monitoring/argocd.yaml)
 
 # Author
 
