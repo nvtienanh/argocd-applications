@@ -1,0 +1,47 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: csi-driver-nfs
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
+      allowEmpty: false
+    syncOptions:
+      - Validate=false
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+      - RespectIgnoreDifferences=true
+      - Replace=true
+  project: default
+  source:
+    chart: csi-driver-nfs
+    repoURL: https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/charts
+    targetRevision: 4.*
+    helm:
+      releaseName: csi-driver-nfs
+      passCredentials: false
+      valuesObject:
+        storageClass:
+          create: true
+          name: nfs-csi
+          annotations:
+            storageclass.kubernetes.io/is-default-class: "true"
+          parameters:
+            # Please update following your NFS server setup
+            server: 192.168.1.12
+            share: /mnt/kubernetes-volumes/data
+            # mountPermissions: "1000"
+          reclaimPolicy: Delete
+          volumeBindingMode: Immediate
+          mountOptions:
+            - nfsvers=4.1
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: kube-system
+  revisionHistoryLimit: 3
