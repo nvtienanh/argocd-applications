@@ -5,7 +5,7 @@ prometheus:
     storageSpec:
       volumeClaimTemplate:
         spec:
-          storageClassName: nfs-storage
+          storageClassName: nfs-csi
           accessModes: ["ReadWriteMany"]
           resources:
             requests:
