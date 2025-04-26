@@ -1,0 +1,73 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cnpg-system
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  labels:
+    name: database
+spec:
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
+      allowEmpty: false
+    syncOptions:
+      - Validate=false
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+      - RespectIgnoreDifferences=true
+      - Replace=true
+      - ServerSideApply=true
+  project: default
+  source:
+    chart: cloudnative-pg
+    repoURL: https://cloudnative-pg.github.io/charts
+    targetRevision: 0.*
+    helm:
+      releaseName: cnpg
+      passCredentials: false
+      parameters:
+        - name: "monitoring.podMonitorEnabled"
+          value: "true"
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: cnpg-system
+  revisionHistoryLimit: 3
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: pg-monitoring
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  labels:
+    name: monitoring
+spec:
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
+      allowEmpty: false
+    syncOptions:
+      - Validate=false
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+      - RespectIgnoreDifferences=true
+      - Replace=true
+  project: default
+  source:
+    chart: cluster
+    repoURL: https://cloudnative-pg.github.io/grafana-dashboards
+    targetRevision: 0.*
+    helm:
+      releaseName: cnpg-grafana
+      passCredentials: false
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: monitoring
+  revisionHistoryLimit: 3

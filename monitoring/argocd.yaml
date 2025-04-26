@@ -26,7 +26,7 @@ spec:
   sources:
     - chart: kube-prometheus-stack
       repoURL: https://prometheus-community.github.io/helm-charts
-      targetRevision: 61.*
+      targetRevision: 70.*
       helm:
         releaseName: monitoring
         passCredentials: false
