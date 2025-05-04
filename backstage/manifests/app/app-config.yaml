@@ -1,0 +1,188 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  main.yaml: |
+    app:
+      title: Backstage Demo
+      baseUrl: https://idp.nvtienanh.info
+      support:
+        url: https://github.com/backstage/backstage/issues
+        items:
+          - title: Backstage Community
+            icon: chat
+            links:
+              - url: https://backstage.io/docs/overview/support
+                title: Support and community
+          - title: Backstage News
+            icon: docs
+            links:
+              - url: https://backstage.io/blog/
+                title: Backstage Blog
+
+    organization:
+      name: Backstage
+
+    backend:
+      baseUrl: https://idp.nvtienanh.info
+      listen:
+        port: 7007
+      csp:
+        connect-src: ["'self'", 'http:', 'https:']
+        img-src:
+          [
+            "'self'",
+            'data:',
+            'https://backstage.io',
+            'https://img.shields.io/',
+            'https://api.dicebear.com/',
+            'https://kroki.io/',
+            'https://www.bestpractices.dev/',
+            'https://api.securityscorecards.dev',
+          ]
+        frame-src: ['https://www.youtube.com']
+      cors:
+        origin: https://idp.nvtienanh.info
+        methods: [GET, POST, PUT, DELETE]
+        credentials: true
+      reading:
+        allow:
+          - host: idp.nvtienanh.info
+            paths:
+              - /api/graphql/schema
+
+    auth:
+      environment: production
+      providers:
+        guest:
+          userEntityRef: user:default/guest
+          dangerouslyAllowOutsideDevelopment: true
+        # microsoft:
+        #   production:
+        #     clientId: ${AZURE_CLIENT_ID}
+        #     clientSecret: ${AZURE_CLIENT_SECRET}
+        #     tenantId: ${AZURE_TENANT_ID}
+        #     domainHint: ${AZURE_TENANT_ID}
+        #     signIn:
+        #       resolvers:
+        #         # See https://backstage.io/docs/auth/microsoft/provider#resolvers for more resolvers
+        #         - resolver: userIdMatchingUserEntityAnnotation
+
+    integrations:
+      github:
+        - host: github.com
+          token: ${GHC_TOKEN}
+
+    catalog:
+      readonly: true
+      # Experimental: Always use the search method in UrlReaderProcessor.
+      # New adopters are encouraged to enable it as this behavior will be the default in a future release.
+      useUrlReadersSearch: true
+      rules:
+        - allow: [Component, API, System, Domain, Resource, Location, User, Group]
+      locations:
+        # Backstage example components
+        - type: url
+          target: https://github.com/backstage/backstage/blob/master/packages/catalog-model/examples/all-components.yaml
+
+        # Backstage example systems
+        - type: url
+          target: https://github.com/backstage/backstage/blob/master/packages/catalog-model/examples/all-systems.yaml
+
+        # Backstage example APIs
+        - type: url
+          target: https://github.com/backstage/backstage/blob/master/packages/catalog-model/examples/all-apis.yaml
+
+        # Backstage example organization groups
+        - type: url
+          target: https://github.com/backstage/backstage/blob/master/packages/catalog-model/examples/acme/org.yaml
+
+        # Backstage example domains
+        - type: url
+          target: https://github.com/backstage/backstage/blob/master/packages/catalog-model/examples/all-domains.yaml
+
+        # Backstage example resources
+        - type: url
+          target: https://github.com/backstage/backstage/blob/master/packages/catalog-model/examples/all-resources.yaml
+
+        # The backstage demo deployment (this)
+        - type: url
+          target: https://github.com/backstage/demo/blob/master/catalog-info.yaml
+
+        # The backstage library repository
+        - type: url
+          target: https://github.com/backstage/backstage/blob/master/catalog-info.yaml
+
+        # Kubernetes demo component
+        - type: url
+          target: https://github.com/mclarke47/dice-roller/blob/master/catalog-info.yaml
+
+        # Demo Software Template
+        - type: url
+          target: https://github.com/backstage/demo/blob/master/demo-template/template/template.yaml
+          rules:
+            - allow: [Template]
+      providers:
+        backstage:
+          enabled: false
+          schedule:
+            frequency: { hours: 12 }
+            timeout: { minutes: 30 }
+
+    costInsights:
+      engineerCost: 200000
+      products:
+        computeEngine:
+          name: Compute Engine
+          icon: compute
+        cloudStorage:
+          name: Cloud Storage
+          icon: storage
+        bigQuery:
+          name: BigQuery
+          icon: search
+      metrics:
+        DAU:
+          name: Daily Active Users
+          default: true
+        MSC:
+          name: Monthly Subscribers
+
+    techdocs:
+      sanitizer:
+        allowedIframeHosts:
+          - www.youtube.com
+      builder: 'external'
+      generator:
+        runIn: 'local'
+      publisher:
+        type: 'local'
+
+    kubernetes:
+      serviceLocatorMethod:
+        type: 'multiTenant'
+      clusterLocatorMethods:
+        - type: 'config'
+          clusters: []
+
+    explore:
+      tools:
+        - title: 'Tech Radar'
+          description: 'Tech Radar is a list of technologies, complemented by an assessment result, called ring assignment.'
+          url: '/tech-radar'
+          image: '/tech-radar.png'
+          tags: ['standards', 'landscape']
+        - title: 'Cost Insights'
+          description: 'Insights into cloud costs for your organization.'
+          url: '/cost-insights'
+          image: '/google-cloud.png'
+          tags: ['cloud', 'finops']
+        - title: 'GraphiQL'
+          description: 'Integrates GraphiQL as a tool to browse GraphiQL endpoints inside Backstage.'
+          url: '/graphiql'
+          image: '/graphiql.png'
+          tags: ['graphql', 'dev']
+
+    notificationsTester:
+      enabled: true

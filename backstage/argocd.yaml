@@ -1,0 +1,136 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: backstage-db
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  labels:
+    name: postgresql
+spec:
+  project: default
+  syncPolicy:
+    automated:
+      prune: true 
+      selfHeal: true 
+      allowEmpty: false
+    syncOptions:
+      - Validate=false
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+      - RespectIgnoreDifferences=true
+      - Replace=true
+  sources:
+    - chart: cluster
+      repoURL: https://cloudnative-pg.github.io/charts
+      targetRevision: 0.*
+      helm:
+        releaseName: backstage-db
+        passCredentials: false
+        parameters:
+          - name: "fullnameOverride"
+            value: "pgsql"
+          - name: "version.postgresql"
+            value: "16"
+            forceString: true
+          - name: "cluster.instances"
+            value: "1"
+          - name: "cluster.storage.storageClass"
+            value: "nfs-csi"
+          - name: "cluster.walStorage.storageClass"
+            value: "nfs-csi"
+          - name: "cluster.walStorage.enabled"
+            value: "true"
+          - name: "cluster.monitoring.enabled"
+            value: "true"
+          - name: "cluster.roles[0].name"
+            value: "backstage"
+          - name: "cluster.roles[0].superuser"
+            value: "true"
+          - name: "cluster.roles[0].login"
+            value: "true"
+          - name: "cluster.initdb.database"
+            value: "backstage"
+          - name: "cluster.initdb.owner"
+            value: "backstage"
+          - name: "cluster.initdb.secret.name"
+            value: "db-admin-creds"
+          # Backup
+          - name: "backups.enabled"
+            value: "false"
+    - repoURL: https://github.com/nvtienanh/argocd-applications
+      targetRevision: HEAD
+      path: backstage/manifests/db
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: backstage
+  revisionHistoryLimit: 3
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: backstage-app
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  labels:
+    name: backstage
+spec:
+  project: default
+  syncPolicy:
+    automated:
+      prune: true 
+      selfHeal: true 
+      allowEmpty: false
+    syncOptions:
+      - Validate=false 
+      - CreateNamespace=true 
+      - PrunePropagationPolicy=foreground 
+      - PruneLast=true 
+      - RespectIgnoreDifferences=true 
+  sources:
+    - chart: backstage
+      repoURL: https://backstage.github.io/charts
+      targetRevision: 2.*
+      helm:
+        releaseName: backstage
+        passCredentials: false
+        parameters:
+        # Ingress
+          - name: "ingress.enabled"
+            value: "true"
+          - name: "ingress.className"
+            value: "nginx"
+          - name: "ingress.annotations.cert-manager\\.io/cluster-issuer"
+            value: "letsencrypt-prod"
+          - name: "ingress.host"
+            value: "idp.nvtienanh.info"
+          - name: "ingress.tls.enabled"
+            value: "true"
+          - name: "ingress.tls.secretName"
+            value: "backstage-tls"
+        # Backstage
+          - name: "backstage.revisionHistoryLimit"
+            value: "3"
+          - name: "backstage.image.registry"
+            value: "docker.io"
+          - name: "backstage.image.repository"
+            value: "nvtienanh/backstage"
+          - name: "backstage.image.tag"
+            value: "latest"
+          - name: "backstage.extraEnvVarsSecrets[0]"
+            value: "backstage-db-creds"
+          - name: "backstage.extraEnvVarsSecrets[1]"
+            value: "app-secrets"
+          - name: "backstage.extraAppConfig[0].configMapRef"
+            value: "app-config"
+          - name: "backstage.extraAppConfig[0].filename"
+            value: "main.yaml"
+    - repoURL: https://github.com/nvtienanh/argocd-applications
+      targetRevision: HEAD
+      path: backstage/manifests/app
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: backstage
+  revisionHistoryLimit: 3
