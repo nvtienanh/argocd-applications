@@ -1,0 +1,10 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: User
+metadata:
+  name: nvtienanh
+spec:
+  profile:
+    # Intentional no displayName for testing
+    email: nvtienanh@outlook.com
+  memberOf: [team-a]
